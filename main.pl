@@ -7,35 +7,35 @@ use Furl;
 
 my $link = 'https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt';
 
-my $wait = 2;
-my $furl = Furl->new(timeout => $wait);
+my $wait = 1;
+my $furl = Furl->new(timeout => 5);
 my @proxy_list = split( /\n/, $furl->get($link)->content );
+my @link_list = ('t.me');
 
 my %proxy_hash;
+my $counter = @proxy_list;
 foreach my $proxy (@proxy_list) {
+    say $counter--, '..';
     my $parsed_proxy = $proxy =~
             s/
             ^.* server=(?<server> [^&]+) .*$
 
             /$+{server}/xr;
 
-    open $proxy_hash{$parsed_proxy}, '-|', "ping -w $wait $parsed_proxy";
-
-    # say $parsed_proxy;
-    # say $proxy_hash{$parsed_proxy};
+    foreach my $link (@link_list) {
+        # say $parsed_proxy;
+        open my $fh, '-|',
+        "curl -s -x GET -o /dev/null --write-out '\%{time_total}' --proxy $parsed_proxy -m $wait $link";
+        while (my $line = <$fh>) {
+            $proxy_hash{$proxy} .= $line;
+        }
+    }
 }
 
-do {
-    say "$wait..";
-    sleep 1;
-    --$wait;
-} while ($wait > 0);
+# sub by_time {
+#     if %_ >
+# }
 
-foreach my $proxy (keys %proxy_hash) {
-    # foreach ($proxy_hash{$proxy}) {
-    #     say $proxy;
-    # }
-    # say $proxy;
-    say $proxy_hash{$proxy};
-    close $proxy;
+foreach (sort {$proxy_hash{$a} <=> $proxy_hash{$b}} keys %proxy_hash) {
+    say "$proxy_hash{$_} - $_" if $proxy_hash{$_} < $wait;
 }
