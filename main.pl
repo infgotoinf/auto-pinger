@@ -13,7 +13,8 @@ my $furl = Furl->new(timeout => 5);
 my @proxy_list = split( /\n/, $furl->get($link)->content );
 # my @link_list = ('t.me');
 # my @link_list = ('www.reaper.fm');
-my @link_list = ('youtube.com');
+die "First argumen must be a link to ping" unless $ARGV[0];
+my @link_list = $ARGV[0];
 
 my %proxy_hash;
 my $counter = @proxy_list;
