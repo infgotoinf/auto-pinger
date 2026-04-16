@@ -8,17 +8,15 @@ use Pod::Usage;
 
 
 my $help = 0;
-
-GetOptions('help|?' => \$help) or pod2usage(2);
-pod2usage(1) if $help;
-pod2usage(2) unless $ARGV[0];
-
-# my $proxy_list = 'https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt';
 my $proxy_list = 'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/all/data.txt';
 my $timeout = 1;
 
-GetOptions( 'link-to-proxy|p' => \$proxy_list
-          , 'timeout|t' => \$timeout);
+
+GetOptions('help|?' => \$help
+          , 'link-to-proxy|p=s' => \$proxy_list
+          , 'timeout|t=i' => \$timeout);
+pod2usage(1) if $help;
+pod2usage(2) unless $ARGV[0];
 
 
 my $furl = Furl->new(timeout => 5);
@@ -29,7 +27,8 @@ my @link_list = @ARGV;
 
 my %proxy_hash;
 my $counter = @proxy_list;
-foreach my $proxy (@proxy_list) {
+foreach my $proxy (@proxy_list)
+{
     say $counter--, '..';
     # my $parsed_proxy = $proxy =~
     #         s/
@@ -39,24 +38,26 @@ foreach my $proxy (@proxy_list) {
 
     my $parsed_proxy = $proxy;
 
-    foreach my $link (@link_list) {
+    foreach my $link (@link_list)
+    {
         # say $parsed_proxy;
         open my $fh, '-|',
         "curl -s -x GET -o /dev/null --write-out '\%{exitcode} \%{time_total}' --proxy $parsed_proxy -m $timeout $link";
 
-        while (my $line = <$fh>) {
-            if ($line =~ /^(?<exit_code>\d+) (?<time>.+)/) {
-                if ($+{exit_code} == 0 && $+{time} < $timeout) {
-                    say "$line - $proxy";
-                    $proxy_hash{$proxy} .= $line;
-                }
+        while (my $line = <$fh>)
+        {
+            if ($line =~ /^(?<exit_code>\d+) (?<time>.+)/
+            and $+{exit_code} == 0 && $+{time} < $timeout)
+            {
+                say "$+{time} - $proxy";
+                $proxy_hash{$proxy} .= $+{time};
             }
         }
     }
 }
 
 foreach (sort {$proxy_hash{$a} <=> $proxy_hash{$b}} keys %proxy_hash) {
-    say "$proxy_hash{$_} - $_" if $proxy_hash{$_} < $timeout;
+    say "$proxy_hash{$_} - $_";
 }
 
 __END__
