@@ -2,6 +2,8 @@
 
 use v5.42;
 use utf8;
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDIN, ':encoding(UTF-8)';
 use Furl;
 use Getopt::Long;
 use Pod::Usage;
@@ -12,7 +14,7 @@ my $proxy_list = 'https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/prox
 my $timeout = 1;
 
 
-GetOptions('help|?' => \$help
+GetOptions( 'help|?' => \$help
           , 'link-to-proxy|p=s' => \$proxy_list
           , 'timeout|t=i' => \$timeout);
 pod2usage(1) if $help;
@@ -42,12 +44,12 @@ foreach my $proxy (@proxy_list)
     {
         # say $parsed_proxy;
         open my $fh, '-|',
-        "curl -s -x GET -o /dev/null --write-out '\%{exitcode} \%{time_total}' --proxy $parsed_proxy -m $timeout $link";
+          "curl -s -L -o /dev/null --write-out '\%{http_code} \%{time_total}' --proxy $parsed_proxy -m $timeout $link";
 
         while (my $line = <$fh>)
         {
-            if ($line =~ /^(?<exit_code>\d+) (?<time>.+)/
-            and $+{exit_code} == 0 && $+{time} < $timeout)
+            if ($line =~ /^(?<http_code>\d{3}) (?<time>[\d.]+)/
+            and $+{http_code} == 200 and $+{time} < $timeout)
             {
                 say "$+{time} - $proxy";
                 $proxy_hash{$proxy} .= $+{time};
