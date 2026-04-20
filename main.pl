@@ -49,7 +49,7 @@ foreach my $proxy (@proxy_list)
         while (my $line = <$fh>)
         {
             if ($line =~ /^(?<http_code>\d{3}) (?<time>[\d.]+)/
-            and ($+{http_code} == 200 and $+{time}) < $timeout)
+            and ($+{http_code} == 200) and ($+{time}) < $timeout)
             {
                 say "$+{time} - $proxy";
                 $proxy_hash{$proxy} .= $+{time};
